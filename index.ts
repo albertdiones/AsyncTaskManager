@@ -22,7 +22,7 @@ export interface AsyncTaskManagerInterface {
  * minTimeoutPerTask - minimum delay for each task
  * maxRandomPreTaskTimeout - random time interval in before each task
  */
-export class FixedIntervalTaskManager implements AsyncTaskManagerInterface {
+export class PaddedScheduleManager implements AsyncTaskManagerInterface {
 
 
   minTimeout: number;
@@ -84,65 +84,4 @@ export class FixedIntervalTaskManager implements AsyncTaskManagerInterface {
 }
 
 
-export const noDelayScheduleManager = new FixedIntervalTaskManager(0,0);
-
-export interface ScheduledTask {
-    start: number;
-    done: number;
-    task: () => any
-}
-
-
-export class PaddedScheduleManager implements AsyncTaskManagerInterface {
-    
-
-  minTimeout: number;
-  maxRandomTimeout: number;
-  logger: LoggerInterface | null;
-  queue: 
-  queueDone: boolean = true;
-
-  constructor(
-    minTimeoutPerTask: number,
-    maxRandomPreTaskTimeout: number,
-    options: {
-      logger?: LoggerInterface
-    } = {}
-  ) {
-    this.minTimeout = minTimeoutPerTask;
-    this.maxRandomTimeout = maxRandomPreTaskTimeout;
-    this.logger = options.logger ?? null;
-  }
-
-  _generateTimeout() {
-    
-    // no random delay, just fixed min timeout
-    if (this.maxRandomTimeout <= 0) {
-        return this.minTimeout;
-    }
-
-    return this.minTimeout 
-    + ( Math.random() * this.maxRandomTimeout );
-  }
-
-  _queueTask(task,timeout) {
-    const prevTask = this.queue[this.queue.lenght-1];
-    this.queue.push(
-        prevTask.then(
-        () => task()
-    ))
-  }
-
-  add(task: () => any, name?: string): Promise<any> {
-
-      // first task = no delay
-      let timeout = 0;   
-      if (!) {
-        timeout = this._generateTimeout()
-      }
-
-      this.logger?.info(`Scheduling task: ${name ?? 'unnamed'} (delay: ${timeout})`);
-
-      return this._queueTask(task,timeout);
-    }
-}
+export const noDelayScheduleManager = new PaddedScheduleManager(0,0);

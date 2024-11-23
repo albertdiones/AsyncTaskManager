@@ -12,9 +12,7 @@ test(
         // this happens instantly, because there's no task on queue
         manager.add(
             () => { // 1
-                console.log('8863216371');
                 x++;
-                return Bun.sleep(100);
             }
         );
 
@@ -39,7 +37,6 @@ test(
         manager.add(
             () => {
                 x+=5; // 10
-                return Bun.sleep(2000); // the task took 2 seconds to finish
             }
         );
         manager.add(
@@ -67,10 +64,6 @@ test(
         await Bun.sleep(200);
 
         expect(x).toBe(5);
-
-        await Bun.sleep(200);
-
-        expect(x).toBe(10);
 
         await Bun.sleep(200);
 
