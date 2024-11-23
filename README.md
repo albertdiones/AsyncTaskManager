@@ -18,3 +18,19 @@ when using PaddedScheduleManager
 and calling manager.add().then(() => )
 it won't have any return(??? needs confirmation)
 because of the weird promise chain
+
+maybe???
+
+```
+// credits: gamerboy123
+then(
+        () => {
+            try {
+                return task()
+            }
+            catch(e) {
+                this.logger?.error(e);
+            }
+        }
+    );;
+```
