@@ -22,7 +22,7 @@ export interface AsyncTaskManagerInterface {
  * minTimeoutPerTask - minimum delay for each task
  * maxRandomPreTaskTimeout - random time interval in before each task
  */
-export class PaddedScheduleManager implements AsyncTaskManagerInterface {
+export class FixedIntervalTaskManager implements AsyncTaskManagerInterface {
 
 
   minTimeout: number;
@@ -84,4 +84,71 @@ export class PaddedScheduleManager implements AsyncTaskManagerInterface {
 }
 
 
-export const noDelayScheduleManager = new PaddedScheduleManager(0,0);
+export const noDelayScheduleManager = new FixedIntervalTaskManager(0,0);
+
+
+export class PaddedScheduleManager implements AsyncTaskManagerInterface {
+    
+
+  minTimeout: number;
+  maxRandomTimeout: number;
+  logger: LoggerInterface | null;
+  queue: Promise<any> | null;
+
+  constructor(
+    minTimeoutPerTask: number,
+    maxRandomPreTaskTimeout: number,
+    options: {
+      logger?: LoggerInterface
+    } = {}
+  ) {
+    this.minTimeout = minTimeoutPerTask;
+    this.maxRandomTimeout = maxRandomPreTaskTimeout;
+    this.logger = options.logger ?? null;
+  }
+
+  _generateTimeout() {
+    
+    // no random delay, just fixed min timeout
+    if (this.maxRandomTimeout <= 0) {
+        return this.minTimeout;
+    }
+
+    return this.minTimeout 
+    + ( Math.random() * this.maxRandomTimeout );
+  }
+
+  _queue(task: () => Promise<any>, timeout: number): Promise<any> {
+    if (!this.queue) {
+        this.queue = Promise.resolve(task()).finally(
+            () => {
+                this.queue = null;
+            }
+        );
+        return this.queue;
+    }
+    this.queue = this.queue.then(
+        () => {
+            return Bun.sleep(timeout)
+        }
+    ).then(
+        () => {
+            return task()
+        }
+    );;
+    return this.queue;
+  }
+
+  add(task: () => any, name?: string): Promise<any> {
+
+      // first task = no delay
+      let timeout = 0;
+      if (this.queue) {
+        timeout = this._generateTimeout();
+      }
+
+      this.logger?.info(`Scheduling task: ${name ?? 'unnamed'} (delay: ${timeout})`);
+
+      return this._queue(task,timeout);
+    }
+}
