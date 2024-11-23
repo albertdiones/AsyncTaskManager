@@ -44,27 +44,31 @@ export class PaddedScheduleManager implements AsyncTaskManagerInterface {
     this.lastTaskSchedule = null;
   }
 
+  _generateTimeout() {
+    const randomDelay = this.maxRandomPreTaskTimeout > 0 ? Math.random()*this.maxRandomPreTaskTimeout : 0;
+    return this.minTimeoutPerTask 
+          + randomDelay;
+  }
+
   add(task: () => any, name?: string): Promise<any> {
-      const randomDelay = this.maxRandomPreTaskTimeout > 0 ? Math.random()*this.maxRandomPreTaskTimeout : 0;
 
       // first task = no delay
-      let delayBeforeTask = 0;   
+      let timeout = 0;   
       if (this.lastTaskSchedule) {
         // existing queue = calculate the delay
-        delayBeforeTask = 
+        timeout = 
           (this.lastTaskSchedule - Date.now())
-          + this.minTimeoutPerTask 
-          + randomDelay;
+          + this._generateTimeout()
       }     
 
-      this.lastTaskSchedule = Date.now() + delayBeforeTask;
+      this.lastTaskSchedule = Date.now() + timeout;
 
-      this.logger?.info(`Scheduling task: ${name} (delay: ${delayBeforeTask})`);
+      this.logger?.info(`Scheduling task: ${name} (delay: ${timeout})`);
 
       return (
-        delayBeforeTask <= 0 // negative delay will also be done instantly
+        timeout <= 0 // negative delay will also be done instantly
         ? task()
-        : Bun.sleep(delayBeforeTask).then(
+        : Bun.sleep(timeout).then(
             () => task()
         )
       );
