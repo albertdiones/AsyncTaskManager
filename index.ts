@@ -50,6 +50,15 @@ export class PaddedScheduleManager implements AsyncTaskManagerInterface {
           + randomDelay;
   }
 
+  _setTimeout(task: () => Promise<any>, timeout: number): Promise<any> {
+    if (timeout <= 0) {// negative delay will also be done instantly)  
+        return Promise.resolve(task());
+    }
+    return Bun.sleep(timeout).then(
+        () => task()
+    );
+  }
+
   add(task: () => any, name?: string): Promise<any> {
 
       // first task = no delay
@@ -65,13 +74,7 @@ export class PaddedScheduleManager implements AsyncTaskManagerInterface {
 
       this.logger?.info(`Scheduling task: ${name} (delay: ${timeout})`);
 
-      return (
-        timeout <= 0 // negative delay will also be done instantly
-        ? task()
-        : Bun.sleep(timeout).then(
-            () => task()
-        )
-      );
+      return this._setTimeout(task,timeout);
     }
 }
 
