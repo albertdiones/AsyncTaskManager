@@ -45,9 +45,14 @@ export class PaddedScheduleManager implements AsyncTaskManagerInterface {
   }
 
   _generateTimeout() {
-    const randomDelay = this.maxRandomTimeout > 0 ? Math.random()*this.maxRandomTimeout : 0;
+    
+    // no random delay, just fixed min timeout
+    if (this.maxRandomTimeout <= 0) {
+        return this.minTimeout;
+    }
+
     return this.minTimeout 
-          + randomDelay;
+    + ( Math.random() * this.maxRandomTimeout );
   }
 
   _setTimeout(task: () => Promise<any>, timeout: number): Promise<any> {
