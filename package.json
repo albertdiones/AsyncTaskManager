@@ -3,6 +3,10 @@
     "name": "AsyncTaskManager",
     "module": "index.ts",
     "type": "module",
+    "scripts": {
+        "loop-test": "while true; do bun test --timeout=20000; sleep 5; done",
+        "validate-ts": "tsc --noEmit --pretty --skipLibCheck"
+    },
     "devDependencies": {
       "@types/bun": "latest",
       "jest": "^29.7.0"
