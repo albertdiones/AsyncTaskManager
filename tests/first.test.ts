@@ -11,7 +11,7 @@ test(
 
         // this happens instantly, because there's no task on queue
         manager.add(
-            () => {
+            () => { // 1
                 x++;
             }
         );
@@ -19,27 +19,24 @@ test(
         // but from here on, it will happen once every 200ms
         manager.add(
             () => {
+                x++; // 2
+            }
+        );
+        // afte 200 ms
+        manager.add(
+            () => {
+                x+=2; // 4
+            }
+        );
+        manager.add(
+            () => {
                 x++;
+                
             }
         );
         manager.add(
             () => {
-                x+=2; // 3
-            }
-        );
-        manager.add(
-            () => {
-                x++; // 4
-            }
-        );
-        manager.add(
-            () => {
-                x+=5; // 9
-            }
-        );
-        manager.add(
-            () => {
-                x++; // 10
+                x+=5; // 10
             }
         );
         manager.add(
@@ -47,12 +44,30 @@ test(
                 x++; // 11
             }
         );
+        manager.add(
+            () => {
+                x++; // 12
+            }
+        );
 
         expect(x).toBe(1);
 
-        //await Bun.sleep(200);
+        await Bun.sleep(200);
 
-        //expect(x).toBe(3);
+        expect(x).toBe(2);
+
+        
+        await Bun.sleep(200);
+        
+        expect(x).toBe(4);
+
+        await Bun.sleep(200);
+
+        expect(x).toBe(5);
+
+        await Bun.sleep(200);
+
+        expect(x).toBe(10);
 
     }
 );
