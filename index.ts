@@ -25,7 +25,7 @@ export interface AsyncTaskManagerInterface {
 export class PaddedScheduleManager implements AsyncTaskManagerInterface {
 
 
-  minTimeoutPerTask: number;
+  minTimeout: number;
   maxRandomPreTaskTimeout: number;
   logger: LoggerInterface | null;
   
@@ -38,7 +38,7 @@ export class PaddedScheduleManager implements AsyncTaskManagerInterface {
       logger?: LoggerInterface
     } = {}
   ) {
-    this.minTimeoutPerTask = minTimeoutPerTask;
+    this.minTimeout = minTimeoutPerTask;
     this.maxRandomPreTaskTimeout = maxRandomPreTaskTimeout;
     this.logger = options.logger ?? null;
     this.lastTaskSchedule = null;
@@ -46,7 +46,7 @@ export class PaddedScheduleManager implements AsyncTaskManagerInterface {
 
   _generateTimeout() {
     const randomDelay = this.maxRandomPreTaskTimeout > 0 ? Math.random()*this.maxRandomPreTaskTimeout : 0;
-    return this.minTimeoutPerTask 
+    return this.minTimeout 
           + randomDelay;
   }
 
