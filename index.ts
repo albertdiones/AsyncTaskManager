@@ -19,52 +19,52 @@ export interface AsyncTaskManagerInterface {
 
 /**
  * A task schedule manager, which enables management of asynchronous 
- * minTimeoutPerRequest - minimum delay for each task
- * maxRandomPreRequestTimeout - random time interval in before each task
+ * minTimeoutPerTask - minimum delay for each task
+ * maxRandomPreTaskTimeout - random time interval in before each task
  */
 export class PaddedScheduleManager implements AsyncTaskManagerInterface {
 
 
-  minTimeoutPerRequest: number;
-  maxRandomPreRequestTimeout: number;
+  minTimeoutPerTask: number;
+  maxRandomPreTaskTimeout: number;
   logger: LoggerInterface | null;
   
-  lastFetchSchedule: number | null;
+  lastTaskSchedule: number | null;
 
   constructor(
-    minTimeoutPerRequest: number,
-    maxRandomPreRequestTimeout: number,
+    minTimeoutPerTask: number,
+    maxRandomPreTaskTimeout: number,
     options: {
       logger?: LoggerInterface
     } = {}
   ) {
-    this.minTimeoutPerRequest = minTimeoutPerRequest;
-    this.maxRandomPreRequestTimeout = maxRandomPreRequestTimeout;
+    this.minTimeoutPerTask = minTimeoutPerTask;
+    this.maxRandomPreTaskTimeout = maxRandomPreTaskTimeout;
     this.logger = options.logger ?? null;
-    this.lastFetchSchedule = null;
+    this.lastTaskSchedule = null;
   }
 
   add(task: () => any, name?: string): Promise<any> {
-      const randomDelay = this.maxRandomPreRequestTimeout > 0 ? Math.random()*this.maxRandomPreRequestTimeout : 0;
+      const randomDelay = this.maxRandomPreTaskTimeout > 0 ? Math.random()*this.maxRandomPreTaskTimeout : 0;
 
-      // first fetch = no delay
-      let delayBeforeFetch = 0;   
-      if (this.lastFetchSchedule) {
+      // first task = no delay
+      let delayBeforeTask = 0;   
+      if (this.lastTaskSchedule) {
         // existing queue = calculate the delay
-        delayBeforeFetch = 
-          (this.lastFetchSchedule - Date.now())
-          + this.minTimeoutPerRequest 
+        delayBeforeTask = 
+          (this.lastTaskSchedule - Date.now())
+          + this.minTimeoutPerTask 
           + randomDelay;
       }     
 
-      this.lastFetchSchedule = Date.now() + delayBeforeFetch;
+      this.lastTaskSchedule = Date.now() + delayBeforeTask;
 
-      this.logger?.info(`Scheduling task: ${name} (delay: ${delayBeforeFetch})`);
+      this.logger?.info(`Scheduling task: ${name} (delay: ${delayBeforeTask})`);
 
       return (
-        delayBeforeFetch <= 0 // negative delay will also be done instantly
+        delayBeforeTask <= 0 // negative delay will also be done instantly
         ? task()
-        : Bun.sleep(delayBeforeFetch).then(
+        : Bun.sleep(delayBeforeTask).then(
             () => task()
         )
       ).catch(
