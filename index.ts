@@ -25,8 +25,8 @@ export interface AsyncTaskManagerInterface {
 export class PaddedScheduleManager implements AsyncTaskManagerInterface {
 
 
-  minTimeoutPerTask: number;
-  maxRandomPreTaskTimeout: number;
+  minTimeout: number;
+  maxRandomTimeout: number;
   logger: LoggerInterface | null;
   
   lastTaskSchedule: number | null;
@@ -38,30 +38,37 @@ export class PaddedScheduleManager implements AsyncTaskManagerInterface {
       logger?: LoggerInterface
     } = {}
   ) {
-    this.minTimeoutPerTask = minTimeoutPerTask;
-    this.maxRandomPreTaskTimeout = maxRandomPreTaskTimeout;
+    this.minTimeout = minTimeoutPerTask;
+    this.maxRandomTimeout = maxRandomPreTaskTimeout;
     this.logger = options.logger ?? null;
     this.lastTaskSchedule = null;
   }
 
-  add(task: () => any, name?: string): Promise<any> {
-      const randomDelay = this.maxRandomPreTaskTimeout > 0 ? Math.random()*this.maxRandomPreTaskTimeout : 0;
+  setNextAvailableSchedule(name?: string ) : number {
+    const randomDelay = this.maxRandomTimeout > 0 ? Math.random()*this.maxRandomTimeout : 0;
 
-      // first task = no delay
-      let delayBeforeTask = 0;   
-      if (this.lastTaskSchedule) {
+    // first task = no delay
+    let delayBeforeTask = 0;   
+    if (this.lastTaskSchedule) {
         // existing queue = calculate the delay
         delayBeforeTask = 
-          (this.lastTaskSchedule - Date.now())
-          + this.minTimeoutPerTask 
-          + randomDelay;
-      }     
+        (this.lastTaskSchedule - Date.now())
+        + this.minTimeout 
+        + randomDelay;
 
-      this.lastTaskSchedule = Date.now() + delayBeforeTask;
+    }
+    
+    this.lastTaskSchedule =  Date.now() + delayBeforeTask;
+    
+    this.logger?.info(`Scheduling task: ${name} (delay: ${delayBeforeTask})`);
+  }
 
-      this.logger?.info(`Scheduling task: ${name} (delay: ${delayBeforeTask})`);
+  add(task: () => any, name?: string): Promise<any> {
 
-      return (
+    const delayBeforeTask
+    
+    this.setNextAvailableSchedule(name);
+    return (
         delayBeforeTask <= 0 // negative delay will also be done instantly
         ? task()
         : Bun.sleep(delayBeforeTask).then(
