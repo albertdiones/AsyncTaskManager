@@ -37,6 +37,7 @@ test(
         manager.add(
             () => {
                 x+=5; // 10
+                return Bun.sleep(2000); // the task took 2 seconds to finish
             }
         );
         manager.add(
@@ -64,6 +65,10 @@ test(
         await Bun.sleep(200);
 
         expect(x).toBe(5);
+
+        await Bun.sleep(200);
+
+        expect(x).toBe(10);
 
         await Bun.sleep(200);
 
