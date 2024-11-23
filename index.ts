@@ -67,11 +67,7 @@ export class PaddedScheduleManager implements AsyncTaskManagerInterface {
         : Bun.sleep(delayBeforeTask).then(
             () => task()
         )
-      ).catch(
-        (e: Error) => {
-          this.logger?.warn(`Error occurred trying to access ${name} : ${e}`)
-        }
-      )
+      );
     }
 }
 

@@ -13,7 +13,6 @@ test(
         manager.add(
             () => {
                 x++;
-                return Promise.resolve();
             }
         );
 
@@ -21,37 +20,31 @@ test(
         manager.add(
             () => {
                 x++;
-                return Promise.resolve();
             }
         );
         manager.add(
             () => {
                 x+=2; // 3
-                return Promise.resolve();
             }
         );
         manager.add(
             () => {
                 x++; // 4
-                return Promise.resolve();
             }
         );
         manager.add(
             () => {
                 x+=5; // 9
-                return Promise.resolve();
             }
         );
         manager.add(
             () => {
                 x++; // 10
-                return Promise.resolve();
             }
         );
         manager.add(
             () => {
                 x++; // 11
-                return Promise.resolve();
             }
         );
 
