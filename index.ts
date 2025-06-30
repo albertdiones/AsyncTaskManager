@@ -131,13 +131,11 @@ export class SequentialTaskManager implements AsyncTaskManagerInterface {
  * A manager of async task that puts a delay time after the previous task
  * e.g. to avoid throtling when fetching apis
  */
-export class PaddedScheduleManager implements AsyncTaskManagerInterface {
+export class PaddedScheduleManager extends SequentialTaskManager {
     
 
   minTimeout: number;
   maxRandomTimeout: number;
-  logger: LoggerInterface | null;
-  queue: Promise<any> | null;
 
   constructor(
     minTimeoutPerTask: number,
@@ -146,9 +144,9 @@ export class PaddedScheduleManager implements AsyncTaskManagerInterface {
       logger?: LoggerInterface
     } = {}
   ) {
+    super({logger: options?.logger});
     this.minTimeout = minTimeoutPerTask;
     this.maxRandomTimeout = maxRandomPreTaskTimeout;
-    this.logger = options.logger ?? null;
   }
 
   _generateTimeout() {
@@ -162,37 +160,15 @@ export class PaddedScheduleManager implements AsyncTaskManagerInterface {
     + ( Math.random() * this.maxRandomTimeout );
   }
 
-  _queue(task: () => Promise<any>, timeout: number): Promise<any> {
+  async add(task: () => any, name?: string): Promise<any> {
     if (!this.queue) {
-        this.queue = Promise.resolve(task()).finally(
-            () => {
-                this.queue = null;
-            }
-        );
-        return this.queue;
+      return super.add(task, name);
     }
-    this.queue = this.queue.then(
-        () => {
-            return Bun.sleep(timeout)
-        }
-    ).then(
-        () => {
-            return task()
-        }
-    );;
-    return this.queue;
+
+    const timeout = this._generateTimeout();
+    const delayedTask = () => Bun.sleep(timeout).then(
+      () => task()
+    );
+    return super.add(delayedTask, name);
   }
-
-  add(task: () => any, name?: string): Promise<any> {
-
-      // first task = no delay
-      let timeout = 0;
-      if (this.queue) {
-        timeout = this._generateTimeout();
-      }
-
-      this.logger?.info(`Scheduling task: ${name ?? 'unnamed'} (delay: ${timeout})`);
-
-      return this._queue(task,timeout);
-    }
 }
