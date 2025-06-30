@@ -1,7 +1,7 @@
 
 {
-    "name": "async-task-manager",
-    "version": "0.0.1",
+    "name": "add-async-task-manager",
+    "version": "0.0.2",
     "module": "index.ts",
     "type": "module",
     "scripts": {
