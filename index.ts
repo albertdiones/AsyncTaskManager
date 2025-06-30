@@ -86,7 +86,51 @@ export class FixedIntervalTaskManager implements AsyncTaskManagerInterface {
 
 export const noDelayScheduleManager = new FixedIntervalTaskManager(0,0);
 
+/**
+ * An async task manager that executes each task, 1 by 1 with no delay
+ * 1 after the other
+ */
+export class SequentialTaskManager implements AsyncTaskManagerInterface {
+  
+  logger: LoggerInterface | null;
+  queue: Promise<any> | null;
 
+  constructor(
+    options: {
+      logger?: LoggerInterface
+    } = {}
+  ) {
+    this.logger = options.logger ?? null;
+  }
+  _queue(task: () => Promise<any>): Promise<any> {
+    if (!this.queue) {
+        this.queue = Promise.resolve(task()).finally(
+            () => {
+                this.queue = null;
+            }
+        );
+        return this.queue;
+    }
+    this.queue = this.queue.then(
+        () => {
+            return task()
+        }
+    );
+    return this.queue;
+  }
+
+  add(task: () => any, name?: string): Promise<any> {
+
+    this.logger?.info(`Scheduling task: ${name ?? 'unnamed'}`);
+
+    return this._queue(task);
+  }
+}
+
+/**
+ * A manager of async task that puts a delay time after the previous task
+ * e.g. to avoid throtling when fetching apis
+ */
 export class PaddedScheduleManager implements AsyncTaskManagerInterface {
     
 

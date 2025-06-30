@@ -1,45 +1,55 @@
 import { test, expect } from '@jest/globals'
-import { PaddedScheduleManager } from '..';
+import { SequentialTaskManager } from '..';
 
 test(
-    'first test',
+    'sequential task manager',
     async () => {
         let x = 0;
       
 
-        const manager = new PaddedScheduleManager(200,0, { logger: console });
+        const manager = new SequentialTaskManager({ logger: console });
+
 
         // this happens instantly, because there's no task on queue
         manager.add(
-            () => { // 1
+            async () => { // 1
                 x++;
             }
         );
 
+        expect(x).toBe(1);
+
         // but from here on, it will happen once every 200ms
         manager.add(
-            () => {
+            async () => {
                 x++; // 2
             }
         );
         // afte 200 ms
         manager.add(
-            () => {
+            async () => {
                 x+=2; // 4
             }
         );
         manager.add(
-            () => {
+            async () => {
                 x++;
-                
             }
         );
+
+        await Bun.sleep(1);
+
+        expect(x).toBe(5);
+        
         manager.add(
             () => {
                 x+=5; // 10
                 return Bun.sleep(2000); // the task took 2 seconds to finish
             }
         );
+        Bun.sleep(1);
+        expect(x).toBe(10);
+
         manager.add(
             () => {
                 x++; // 11
@@ -51,37 +61,9 @@ test(
             }
         );
 
-        expect(x).toBe(1);
+        await Bun.sleep(2005);
 
-        await Bun.sleep(205);
-
-        expect(x).toBe(2);
-
-        
-        await Bun.sleep(200);
-        
-        expect(x).toBe(4);
-
-        await Bun.sleep(200);
-
-        expect(x).toBe(5);
-
-        await Bun.sleep(200);
-
-        expect(x).toBe(10);
-
-        await Bun.sleep(200);
-
-        expect(x).toBe(10);
-
-        await Bun.sleep(1800);
-
-        expect(x).toBe(10);        
-
-        await Bun.sleep(200);
-        
-        expect(x).toBe(11);
-
+        expect(x).toBe(12);
 
     }
 );
