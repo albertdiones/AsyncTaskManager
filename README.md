@@ -1,3 +1,7 @@
+A task manager for running sequential task (optionally with padding)
+
+Good for fetch()es avoiding throttling and database inserts that disallow parallel operations
+
 Todos:
  * Copy base class from nonChallantJs
  * Create basic jest test
