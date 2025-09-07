@@ -53,7 +53,7 @@ test(
 
         expect(x).toBe(1);
 
-        await Bun.sleep(201);
+        await Bun.sleep(205);
 
         expect(x).toBe(2);
 
