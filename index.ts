@@ -93,7 +93,8 @@ export const noDelayScheduleManager = new FixedIntervalTaskManager(0,0);
 export class SequentialTaskManager implements AsyncTaskManagerInterface {
   
   logger: LoggerInterface | null;
-  queue: Promise<any> | null;
+  queue: Array< () => Promise<any>> = [];
+  running: boolean = false;
 
   constructor(
     options: {
@@ -103,20 +104,32 @@ export class SequentialTaskManager implements AsyncTaskManagerInterface {
     this.logger = options.logger ?? null;
   }
   _queue(task: () => Promise<any>): Promise<any> {
-    if (!this.queue) {
-        this.queue = Promise.resolve(task()).finally(
-            () => {
-                this.queue = null;
-            }
-        );
-        return this.queue;
-    }
-    this.queue = this.queue.then(
-        () => {
-            return task()
+    return new Promise(
+      (resolve, reject) => {
+        this.queue.push(
+          () => {
+            return Promise.resolve(task())
+              .then(resolve)
+              .catch(reject);
+          }
+        );    
+        if (!this.running) {
+            this._runNext();
         }
+      }
+    );    
+  }
+
+  _runNext() {
+    const nextTask = this.queue.shift();
+    if (!nextTask) {
+      this.running = false;
+      return;
+    }
+    this.running = true;
+    return nextTask().then(
+      () => this._runNext()
     );
-    return this.queue;
   }
 
   add(task: () => any, name?: string): Promise<any> {
@@ -124,6 +137,10 @@ export class SequentialTaskManager implements AsyncTaskManagerInterface {
     this.logger?.info(`Scheduling task: ${name ?? 'unnamed'}`);
 
     return this._queue(task);
+  }
+
+  abortAllQueue() {
+    this.queue = [];
   }
 }
 
@@ -159,16 +176,14 @@ export class PaddedScheduleManager extends SequentialTaskManager {
     return this.minTimeout 
     + ( Math.random() * this.maxRandomTimeout );
   }
-
-  async add(task: () => any, name?: string): Promise<any> {
-    if (!this.queue) {
-      return super.add(task, name);
+  
+  _runNext() {
+    if (this.running) {
+      const timeout: number = this._generateTimeout();
+      return Bun.sleep(timeout).then(
+        () => super._runNext()
+      )
     }
-
-    const timeout = this._generateTimeout();
-    const delayedTask = () => Bun.sleep(timeout).then(
-      () => task()
-    );
-    return super.add(delayedTask, name);
+    return super._runNext();
   }
 }

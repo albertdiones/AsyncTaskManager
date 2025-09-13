@@ -7,7 +7,7 @@ test(
         let x = 0;
       
 
-        const manager = new PaddedScheduleManager(100, 100, { logger: console });
+        const manager = new PaddedScheduleManager(100, 0, { logger: console });
 
 
         // this happens instantly, because there's no task on queue
