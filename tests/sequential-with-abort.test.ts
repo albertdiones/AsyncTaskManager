@@ -27,7 +27,7 @@ test(
         );
         expect(x).toBe(1);
 
-        manager.abortAllQueue();
+        manager.abortAll();
         await Bun.sleep(500);
         expect(x).toBe(6);
         manager.add(
@@ -63,7 +63,7 @@ test(
         expect(x).toBe(107);
         await Bun.sleep(50);
         expect(x).toBe(110);
-        manager.abortAllQueue();
+        manager.abortAll();
         await Bun.sleep(200);
         expect(x).toBe(1110); // if abort fails, 1115
         await Bun.sleep(200);

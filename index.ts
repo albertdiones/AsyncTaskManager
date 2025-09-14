@@ -139,7 +139,7 @@ export class SequentialTaskManager implements AsyncTaskManagerInterface {
     return this._queue(task);
   }
 
-  abortAllQueue() {
+  abortAll() {
     this.queue = [];
   }
 }
